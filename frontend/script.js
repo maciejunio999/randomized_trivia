@@ -13,9 +13,21 @@ async function loadQuestion() {
   answersBox.innerHTML = "";
   questionText.textContent = "Ładuję pytanie...";
 
+  const category = document.getElementById("category").value;
+  const difficulty = document.getElementById("difficulty").value;
+
+  const url = new URL(API_URL);
+  if (category) url.searchParams.append("category", category);
+  if (difficulty) url.searchParams.append("difficulty", difficulty);
+
   try {
-    const res = await fetch(API_URL);
+    const res = await fetch(url.toString());
     const data = await res.json();
+
+    if (data.error) {
+      questionText.textContent = "Nie udało się pobrać pytania.";
+      return;
+    }
 
     const decodedQuestion = decodeHTMLEntities(data.question);
     correctAnswer = decodeHTMLEntities(data.correct_answer);
@@ -33,7 +45,7 @@ async function loadQuestion() {
     });
 
   } catch (err) {
-    questionText.textContent = "Nie udało się załadować pytania.";
+    questionText.textContent = "Wystąpił błąd.";
     console.error(err);
   }
 }
@@ -71,4 +83,13 @@ function decodeHTMLEntities(text) {
   return txt.value;
 }
 
-loadQuestion();
+document.getElementById("start-btn").addEventListener("click", () => {
+  document.querySelector(".setup").style.display = "none";
+  document.querySelector(".quiz-container").style.display = "block";
+  loadQuestion();
+});
+
+document.getElementById("back-btn").addEventListener("click", () => {
+  document.querySelector(".quiz-container").style.display = "none";
+  document.querySelector(".setup").style.display = "block";
+});

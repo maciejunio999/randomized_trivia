@@ -1,13 +1,44 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
   <meta charset="UTF-8">
   <title>Quiz Wiedzy Ogólnej</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <div class="quiz-container">
+
+    <div class="setup">
+        <h2>Wybierz kategorię i/lub poziom trudności</h2>
+
+        <label for="category">Kategoria:</label>
+        <select id="category">
+            <option value="">Losowa</option>
+            <option value="9">Wiedza ogólna</option>
+            <option value="11">Film</option>
+            <option value="12">Muzyka</option>
+            <option value="15">Gry wideo</option>
+            <option value="18">Komputery</option>
+            <option value="23">Historia</option>
+            <option value="27">Zwierzęta</option>
+        </select>
+
+        <label for="difficulty">Poziom trudności:</label>
+        <select id="difficulty">
+            <option value="">Losowy</option>
+            <option value="easy">Łatwy</option>
+            <option value="medium">Średni</option>
+            <option value="hard">Trudny</option>
+        </select>
+
+        <button id="start-btn">Rozpocznij quiz</button>
+        </div>
+
+
+  <div class="quiz-container" style="display: none;">
     <h1>Quiz Wiedzy Ogólnej</h1>
+    <button id="back-btn">← Wróć do konfiguracji</button>
     <div id="question-box">
       <p id="question-text">Ładuję pytanie...</p>
       <div id="answers"></div>
@@ -17,5 +48,7 @@
   </div>
 
   <script src="script.js"></script>
+
 </body>
+
 </html>
