@@ -32,15 +32,20 @@
             <option value="hard">Trudny</option>
         </select>
 
-        <button id="start-btn">Rozpocznij quiz</button>
+        <div>
+          <input type="checkbox" id="enable-timer" />
+          <label for="enable-timer">Włącz limit czasu (15 sek)</label>
         </div>
 
+        <button id="start-btn">Rozpocznij quiz</button>
+        </div>
 
   <div class="quiz-container" style="display: none;">
     <h1>Quiz Wiedzy Ogólnej</h1>
     <button id="back-btn">← Wróć do konfiguracji</button>
     <div id="question-box">
       <p id="question-text">Ładuję pytanie...</p>
+      <p id="timer" style="font-weight: bold; color: red;"></p>
       <div id="answers"></div>
     </div>
     <p id="feedback"></p>

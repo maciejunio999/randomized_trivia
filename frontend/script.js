@@ -5,6 +5,10 @@ const answersBox = document.getElementById("answers");
 const feedback = document.getElementById("feedback");
 const nextBtn = document.getElementById("next-btn");
 
+let timerInterval = null;
+let timerEnabled = false;
+let timeLeft = 15;
+
 let correctAnswer = "";
 
 async function loadQuestion() {
@@ -12,6 +16,12 @@ async function loadQuestion() {
   feedback.textContent = "";
   answersBox.innerHTML = "";
   questionText.textContent = "Ładuję pytanie...";
+  document.getElementById("timer").textContent = "";
+
+  // pobierz ustawienie timera
+  timerEnabled = document.getElementById("enable-timer").checked;
+
+  clearInterval(timerInterval); // wyczyść poprzedni timer
 
   const category = document.getElementById("category").value;
   const difficulty = document.getElementById("difficulty").value;
@@ -44,6 +54,10 @@ async function loadQuestion() {
       answersBox.appendChild(btn);
     });
 
+    if (timerEnabled) {
+      startTimer();
+    }
+
   } catch (err) {
     questionText.textContent = "Wystąpił błąd.";
     console.error(err);
@@ -51,6 +65,8 @@ async function loadQuestion() {
 }
 
 function handleAnswer(button, answer) {
+  clearInterval(timerInterval);
+
   const allButtons = document.querySelectorAll(".answer-btn");
 
   allButtons.forEach(btn => {
@@ -62,13 +78,17 @@ function handleAnswer(button, answer) {
     }
   });
 
-  feedback.textContent = answer === correctAnswer ? "✅ Dobrze!" : `❌ Źle! Poprawna odpowiedź to: ${correctAnswer}`;
-  nextBtn.disabled = false;
-}
+  if (!answer || answer === "") {
+    feedback.textContent = `⏱️ Czas minął! Poprawna odpowiedź to: ${correctAnswer}`;
+  } else {
+    feedback.textContent = answer === correctAnswer
+      ? "✅ Dobrze!"
+      : `❌ Źle! Poprawna odpowiedź to: ${correctAnswer}`;
+  }
 
-nextBtn.addEventListener("click", () => {
-  loadQuestion();
-});
+  nextBtn.disabled = false;
+  document.getElementById("timer").textContent = "";
+}
 
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -92,4 +112,25 @@ document.getElementById("start-btn").addEventListener("click", () => {
 document.getElementById("back-btn").addEventListener("click", () => {
   document.querySelector(".quiz-container").style.display = "none";
   document.querySelector(".setup").style.display = "block";
+});
+
+function startTimer() {
+  nextBtn.disabled = true; // zablokuj na czas odliczania
+  timeLeft = 15;
+  const timerDisplay = document.getElementById("timer");
+  timerDisplay.textContent = `Pozostało: ${timeLeft}s`;
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    timerDisplay.textContent = `Pozostało: ${timeLeft}s`;
+
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      handleAnswer(null, ""); // brak odpowiedzi
+    }
+  }, 1000);
+}
+
+nextBtn.addEventListener("click", () => {
+  loadQuestion();
 });
