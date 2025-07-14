@@ -18,10 +18,9 @@ async function loadQuestion() {
   questionText.textContent = "Ładuję pytanie...";
   document.getElementById("timer").textContent = "";
 
-  // pobierz ustawienie timera
   timerEnabled = document.getElementById("enable-timer").checked;
 
-  clearInterval(timerInterval); // wyczyść poprzedni timer
+  clearInterval(timerInterval);
 
   const category = document.getElementById("category").value;
   const difficulty = document.getElementById("difficulty").value;
@@ -34,11 +33,14 @@ async function loadQuestion() {
     const res = await fetch(url.toString());
     const data = await res.json();
 
-    if (data.error) {
-      questionText.textContent = "Nie udało się pobrać pytania.";
+    if (!data || !data.question || !data.correct_answer || !Array.isArray(data.answers)) {
+      questionText.textContent = "Nie udało się pobrać pytania. 😕";
+      document.getElementById("retry-btn").style.display = "inline-block";
       return;
     }
 
+
+    document.getElementById("retry-btn").style.display = "none";
     const decodedQuestion = decodeHTMLEntities(data.question);
     correctAnswer = decodeHTMLEntities(data.correct_answer);
     const answers = data.answers.map(decodeHTMLEntities);
@@ -59,9 +61,11 @@ async function loadQuestion() {
     }
 
   } catch (err) {
-    questionText.textContent = "Wystąpił błąd.";
-    console.error(err);
+    console.error("Błąd przy fetchu:", err);
+    questionText.textContent = "Wystąpił błąd przy pobieraniu pytania.";
+    document.getElementById("retry-btn").style.display = "inline-block";
   }
+
 }
 
 function handleAnswer(button, answer) {
@@ -115,7 +119,7 @@ document.getElementById("back-btn").addEventListener("click", () => {
 });
 
 function startTimer() {
-  nextBtn.disabled = true; // zablokuj na czas odliczania
+  nextBtn.disabled = true;
   timeLeft = 15;
   const timerDisplay = document.getElementById("timer");
   timerDisplay.textContent = `Pozostało: ${timeLeft}s`;
@@ -126,11 +130,15 @@ function startTimer() {
 
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
-      handleAnswer(null, ""); // brak odpowiedzi
+      handleAnswer(null, "");
     }
   }, 1000);
 }
 
 nextBtn.addEventListener("click", () => {
+  loadQuestion();
+});
+
+document.getElementById("retry-btn").addEventListener("click", () => {
   loadQuestion();
 });
