@@ -111,3 +111,39 @@ body {
 #retry-btn:hover {
   background-color: #e0a800;
 }
+
+#summary-box {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 30px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+#summary-box h2 {
+  font-size: 2em;
+  margin-bottom: 20px;
+}
+
+#summary-box p {
+  font-size: 1.2em;
+  margin: 10px 0;
+}
+
+#restart-btn {
+  margin-top: 25px;
+  padding: 10px 20px;
+  font-size: 1em;
+  border: none;
+  background-color: #3498db;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#restart-btn:hover {
+  background-color: #2980b9;
+}

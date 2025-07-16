@@ -12,18 +12,14 @@ let score = 0;
 let timerInterval = null;
 let timerEnabled = false;
 let timeLeft = 15;
-
 let correctAnswer = "";
 
 let retryCount = 0;
 const MAX_RETRIES = 3;
 
+// Ładowanie pytania
 async function loadQuestion() {
-  if (currentQuestion >= totalQuestions) {
-    showSummary();
-    return;
-  }
-
+  // Blokujemy przycisk i czyścimy poprzednie dane
   nextBtn.disabled = true;
   feedback.textContent = "";
   answersBox.innerHTML = "";
@@ -45,27 +41,29 @@ async function loadQuestion() {
     const res = await fetch(url.toString());
     const data = await res.json();
 
-    console.log("ODEBRANE:", data);
-
-    if (
-      data.error ||
-      !data.question ||
-      !data.correct_answer ||
-      !Array.isArray(data.answers) ||
-      data.answers.length === 0
-    ) {
-      throw new Error(data.error || "Błąd danych pytania");
+    // Walidacja danych
+    if (!data || !data.question || !data.correct_answer || !data.answers) {
+      throw new Error(data?.error || "Błąd danych pytania");
     }
 
+    // Reset liczby prób
     retryCount = 0;
 
+    // Ustawienie tekstu przycisku
+    if (currentQuestion === totalQuestions - 1) {
+      nextBtn.textContent = "Zakończ";
+    } else {
+      nextBtn.textContent = "Następne pytanie";
+    }
+
+    // Dekodujemy pytanie i odpowiedzi
     const decodedQuestion = decodeHTMLEntities(data.question);
     correctAnswer = decodeHTMLEntities(data.correct_answer);
     const answers = data.answers.map(decodeHTMLEntities);
     shuffleArray(answers);
 
+    // Wyświetlamy pytanie i odpowiedzi
     questionText.textContent = decodedQuestion;
-
     answers.forEach(answer => {
       const btn = document.createElement("button");
       btn.classList.add("answer-btn");
@@ -74,12 +72,11 @@ async function loadQuestion() {
       answersBox.appendChild(btn);
     });
 
-    document.getElementById("question-counter").textContent =
-      `Pytanie ${currentQuestion + 1} z ${totalQuestions}`;
+    // Pokazujemy licznik pytania
+    document.getElementById("question-counter").textContent = `Pytanie ${currentQuestion + 1} z ${totalQuestions}`;
 
+    // Odpalamy timer jeśli włączony
     if (timerEnabled) startTimer();
-
-    currentQuestion++;
 
   } catch (err) {
     console.error("Błąd przy pobieraniu pytania:", err.message || err);
@@ -91,13 +88,10 @@ async function loadQuestion() {
     }
 
     questionText.textContent = "Nie udało się pobrać pytania. 😕";
-    if (currentQuestion + 1 === totalQuestions) {
-      nextBtn.textContent = "Zakończ quiz";
-    } else {
-      nextBtn.textContent = "Następne pytanie";
-    }
-
+    nextBtn.disabled = false;
+    nextBtn.textContent = currentQuestion + 1 >= totalQuestions ? "Zakończ" : "Następne pytanie";
     document.getElementById("retry-btn").style.display = "inline-block";
+    return;
   }
 }
 
@@ -105,7 +99,6 @@ function handleAnswer(button, answer) {
   clearInterval(timerInterval);
 
   const allButtons = document.querySelectorAll(".answer-btn");
-
   allButtons.forEach(btn => {
     btn.disabled = true;
     if (btn.textContent === correctAnswer) {
@@ -115,7 +108,7 @@ function handleAnswer(button, answer) {
     }
   });
 
-  if (!answer || answer === "") {
+  if (!answer) {
     feedback.textContent = `⏱️ Czas minął! Poprawna odpowiedź to: ${correctAnswer}`;
   } else if (answer === correctAnswer) {
     feedback.textContent = "✅ Dobrze!";
@@ -141,20 +134,6 @@ function decodeHTMLEntities(text) {
   return txt.value;
 }
 
-document.getElementById("start-btn").addEventListener("click", () => {
-  currentQuestion = 0;
-  score = 0;
-
-  document.querySelector(".setup").style.display = "none";
-  document.querySelector(".quiz-container").style.display = "block";
-  loadQuestion();
-});
-
-document.getElementById("back-btn").addEventListener("click", () => {
-  document.querySelector(".quiz-container").style.display = "none";
-  document.querySelector(".setup").style.display = "block";
-});
-
 function startTimer() {
   nextBtn.disabled = true;
   timeLeft = 15;
@@ -172,36 +151,56 @@ function startTimer() {
   }, 1000);
 }
 
-nextBtn.addEventListener("click", () => {
-  if (nextBtn.textContent === "Zakończ quiz") {
-    showSummary();
-  } else {
-    loadQuestion();
-  }
+// Obsługa kliknięcia 'Start'
+document.getElementById("start-btn").addEventListener("click", () => {
+  currentQuestion = 0;
+  score = 0;
+
+  document.querySelector(".setup").style.display = "none";
+  document.querySelector(".quiz-container").style.display = "block";
+  document.getElementById("summary-box").style.display = "none";
+
+  loadQuestion();
 });
 
+// Przycisk powrotu do konfiguracji
+document.getElementById("back-btn").addEventListener("click", () => {
+  document.querySelector(".quiz-container").style.display = "none";
+  document.querySelector(".setup").style.display = "block";
+});
+
+// Przycisk retry (próba ponownego pobrania pytania)
 document.getElementById("retry-btn").addEventListener("click", () => {
   loadQuestion();
 });
 
-function showSummary() {
-  const quizBox = document.querySelector(".quiz");
-  if (!quizBox) {
-    console.error("Brakuje elementu .quiz na stronie!");
+// Przycisk następne pytanie / zakończ quiz
+document.getElementById("next-btn").addEventListener("click", () => {
+  currentQuestion++;
+  if (currentQuestion >= totalQuestions) {
+    showSummary();
     return;
   }
+  loadQuestion();
+});
 
-  quizBox.innerHTML = `
-    <h2>Koniec quizu!</h2>
-    <p>Twój wynik: ${score} / ${totalQuestions}</p>
-    <button onclick="restartQuiz()">Zagraj ponownie</button>
-  `;
+// Podsumowanie wyniku
+function showSummary() {
+  document.querySelector(".quiz-container").style.display = "none";
+  document.getElementById("summary-box").style.display = "block";
+
+  const resultText = document.getElementById("result-text");
+  const percentText = document.getElementById("percent-text");
+  resultText.textContent = `Twój wynik: ${score} / ${totalQuestions}`;
+  const percent = Math.round((score / totalQuestions) * 100);
+  percentText.textContent = `To ${percent}% poprawnych odpowiedzi.`;
 }
 
-
-function restartQuiz() {
+// Restart quizu z podsumowania
+document.getElementById("restart-btn").addEventListener("click", () => {
   currentQuestion = 0;
   score = 0;
-  document.getElementById("setup").style.display = "block";
-  document.querySelector(".quiz").style.display = "none";
-}
+
+  document.getElementById("summary-box").style.display = "none";
+  document.querySelector(".setup").style.display = "block";
+});
