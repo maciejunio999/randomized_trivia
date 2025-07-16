@@ -5,21 +5,33 @@ const answersBox = document.getElementById("answers");
 const feedback = document.getElementById("feedback");
 const nextBtn = document.getElementById("next-btn");
 
+let currentQuestion = 0;
+let totalQuestions = 10;
+let score = 0;
+
 let timerInterval = null;
 let timerEnabled = false;
 let timeLeft = 15;
 
 let correctAnswer = "";
 
+let retryCount = 0;
+const MAX_RETRIES = 3;
+
 async function loadQuestion() {
+  if (currentQuestion >= totalQuestions) {
+    showSummary();
+    return;
+  }
+
   nextBtn.disabled = true;
   feedback.textContent = "";
   answersBox.innerHTML = "";
   questionText.textContent = "Ładuję pytanie...";
   document.getElementById("timer").textContent = "";
+  document.getElementById("retry-btn").style.display = "none";
 
   timerEnabled = document.getElementById("enable-timer").checked;
-
   clearInterval(timerInterval);
 
   const category = document.getElementById("category").value;
@@ -33,14 +45,20 @@ async function loadQuestion() {
     const res = await fetch(url.toString());
     const data = await res.json();
 
-    if (!data || !data.question || !data.correct_answer || !Array.isArray(data.answers)) {
-      questionText.textContent = "Nie udało się pobrać pytania. 😕";
-      document.getElementById("retry-btn").style.display = "inline-block";
-      return;
+    console.log("ODEBRANE:", data);
+
+    if (
+      data.error ||
+      !data.question ||
+      !data.correct_answer ||
+      !Array.isArray(data.answers) ||
+      data.answers.length === 0
+    ) {
+      throw new Error(data.error || "Błąd danych pytania");
     }
 
+    retryCount = 0;
 
-    document.getElementById("retry-btn").style.display = "none";
     const decodedQuestion = decodeHTMLEntities(data.question);
     correctAnswer = decodeHTMLEntities(data.correct_answer);
     const answers = data.answers.map(decodeHTMLEntities);
@@ -56,16 +74,31 @@ async function loadQuestion() {
       answersBox.appendChild(btn);
     });
 
-    if (timerEnabled) {
-      startTimer();
-    }
+    document.getElementById("question-counter").textContent =
+      `Pytanie ${currentQuestion + 1} z ${totalQuestions}`;
+
+    if (timerEnabled) startTimer();
+
+    currentQuestion++;
 
   } catch (err) {
-    console.error("Błąd przy fetchu:", err);
-    questionText.textContent = "Wystąpił błąd przy pobieraniu pytania.";
+    console.error("Błąd przy pobieraniu pytania:", err.message || err);
+
+    retryCount++;
+    if (retryCount < MAX_RETRIES) {
+      console.warn(`Ponawiam próbę pobrania pytania... (${retryCount})`);
+      return loadQuestion();
+    }
+
+    questionText.textContent = "Nie udało się pobrać pytania. 😕";
+    if (currentQuestion + 1 === totalQuestions) {
+      nextBtn.textContent = "Zakończ quiz";
+    } else {
+      nextBtn.textContent = "Następne pytanie";
+    }
+
     document.getElementById("retry-btn").style.display = "inline-block";
   }
-
 }
 
 function handleAnswer(button, answer) {
@@ -84,10 +117,11 @@ function handleAnswer(button, answer) {
 
   if (!answer || answer === "") {
     feedback.textContent = `⏱️ Czas minął! Poprawna odpowiedź to: ${correctAnswer}`;
+  } else if (answer === correctAnswer) {
+    feedback.textContent = "✅ Dobrze!";
+    score++;
   } else {
-    feedback.textContent = answer === correctAnswer
-      ? "✅ Dobrze!"
-      : `❌ Źle! Poprawna odpowiedź to: ${correctAnswer}`;
+    feedback.textContent = `❌ Źle! Poprawna odpowiedź to: ${correctAnswer}`;
   }
 
   nextBtn.disabled = false;
@@ -108,6 +142,9 @@ function decodeHTMLEntities(text) {
 }
 
 document.getElementById("start-btn").addEventListener("click", () => {
+  currentQuestion = 0;
+  score = 0;
+
   document.querySelector(".setup").style.display = "none";
   document.querySelector(".quiz-container").style.display = "block";
   loadQuestion();
@@ -136,9 +173,35 @@ function startTimer() {
 }
 
 nextBtn.addEventListener("click", () => {
-  loadQuestion();
+  if (nextBtn.textContent === "Zakończ quiz") {
+    showSummary();
+  } else {
+    loadQuestion();
+  }
 });
 
 document.getElementById("retry-btn").addEventListener("click", () => {
   loadQuestion();
 });
+
+function showSummary() {
+  const quizBox = document.querySelector(".quiz");
+  if (!quizBox) {
+    console.error("Brakuje elementu .quiz na stronie!");
+    return;
+  }
+
+  quizBox.innerHTML = `
+    <h2>Koniec quizu!</h2>
+    <p>Twój wynik: ${score} / ${totalQuestions}</p>
+    <button onclick="restartQuiz()">Zagraj ponownie</button>
+  `;
+}
+
+
+function restartQuiz() {
+  currentQuestion = 0;
+  score = 0;
+  document.getElementById("setup").style.display = "block";
+  document.querySelector(".quiz").style.display = "none";
+}
