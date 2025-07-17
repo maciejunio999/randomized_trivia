@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="pl">
-
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Quiz Wiedzy Ogólnej</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
+
   <!-- Panel konfiguracji quizu -->
-  <div class="setup">
+  <div class="setup" id="config-box">
     <h2>Wybierz kategorię i/lub poziom trudności</h2>
 
     <label for="category">Kategoria:</label>
@@ -33,8 +32,18 @@
     </select>
 
     <div>
+      <label for="question-count">Liczba pytań:</label>
+      <input type="number" id="question-count" min="1" max="50" value="10" />
+    </div>
+
+    <div>
       <input type="checkbox" id="enable-timer" />
-      <label for="enable-timer">Włącz limit czasu (15 sek)</label>
+      <label for="enable-timer">Włącz limit czasu</label>
+    </div>
+
+    <div id="time-container" style="display: none;">
+      <label for="time-limit">Limit czasu na pytanie (sekundy):</label>
+      <input type="number" id="time-limit" min="5" max="60" value="15" />
     </div>
 
     <button id="start-btn">Rozpocznij quiz</button>
@@ -56,12 +65,13 @@
   </div>
 
   <!-- Podsumowanie -->
-  <div id="summary-box" style="display: none; text-align: center;">
+  <div id="summary-box" style="display: none;">
     <h2>Podsumowanie</h2>
     <p id="result-text"></p>
     <p id="percent-text"></p>
     <button id="restart-btn">🔁 Wróć do konfiguracji</button>
   </div>
+
 
   <script src="script.js"></script>
 </body>

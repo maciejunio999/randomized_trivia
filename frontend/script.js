@@ -27,7 +27,6 @@ async function loadQuestion() {
   document.getElementById("timer").textContent = "";
   document.getElementById("retry-btn").style.display = "none";
 
-  timerEnabled = document.getElementById("enable-timer").checked;
   clearInterval(timerInterval);
 
   const category = document.getElementById("category").value;
@@ -135,8 +134,8 @@ function decodeHTMLEntities(text) {
 }
 
 function startTimer() {
-  nextBtn.disabled = true;
-  timeLeft = 15;
+  nextBtn.disabled = true;const userTime = parseInt(document.getElementById("time-limit")?.value);
+  timeLeft = userTime > 0 ? userTime : 15;
   const timerDisplay = document.getElementById("timer");
   timerDisplay.textContent = `Pozostało: ${timeLeft}s`;
 
@@ -156,12 +155,21 @@ document.getElementById("start-btn").addEventListener("click", () => {
   currentQuestion = 0;
   score = 0;
 
+  // Pobierz wartości z formularza
+  const countInput = document.getElementById("question-count").value;
+  const timeInput = document.getElementById("time-limit").value;
+
+  totalQuestions = Math.max(1, parseInt(countInput) || 10); // domyślnie 10
+  timeLeft = Math.max(5, parseInt(timeInput) || 15);         // domyślnie 15
+
+  timerEnabled = document.getElementById("enable-timer")?.checked || false;
+
   document.querySelector(".setup").style.display = "none";
   document.querySelector(".quiz-container").style.display = "block";
-  document.getElementById("summary-box").style.display = "none";
 
   loadQuestion();
 });
+
 
 // Przycisk powrotu do konfiguracji
 document.getElementById("back-btn").addEventListener("click", () => {
@@ -203,4 +211,10 @@ document.getElementById("restart-btn").addEventListener("click", () => {
 
   document.getElementById("summary-box").style.display = "none";
   document.querySelector(".setup").style.display = "block";
+});
+
+// dynamiczne pokazywanie pola limitu czasu
+document.getElementById("enable-timer").addEventListener("change", (e) => {
+  const timeContainer = document.getElementById("time-container");
+  timeContainer.style.display = e.target.checked ? "block" : "none";
 });
