@@ -199,9 +199,25 @@ function showSummary() {
 
   const resultText = document.getElementById("result-text");
   const percentText = document.getElementById("percent-text");
-  resultText.textContent = `Twój wynik: ${score} / ${totalQuestions}`;
+  const commentText = document.getElementById("comment-text");  // <-- dodany element
+
   const percent = Math.round((score / totalQuestions) * 100);
+  resultText.textContent = `Twój wynik: ${score} / ${totalQuestions}`;
   percentText.textContent = `To ${percent}% poprawnych odpowiedzi.`;
+
+  // Komentarz na podstawie wyniku
+  let comment = "";
+  if (percent <= 30) {
+    comment = "Musisz jeszcze poćwiczyć! 💡";
+  } else if (percent <= 60) {
+    comment = "Nieźle, ale stać Cię na więcej! 🙂";
+  } else if (percent <= 90) {
+    comment = "Świetny wynik! 💪";
+  } else {
+    comment = "Mistrz! 👑";
+  }
+
+  commentText.textContent = comment;
 }
 
 // Restart quizu z podsumowania
