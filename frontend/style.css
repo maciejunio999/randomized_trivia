@@ -157,3 +157,19 @@ body {
 #time-container {
   margin-top: 10px;
 }
+
+.progress-bar {
+  width: 100%;
+  background-color: #eee;
+  height: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background-color: #007bff;
+  transition: width 0.3s ease;
+}

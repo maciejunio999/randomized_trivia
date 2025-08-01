@@ -35,3 +35,5 @@ def get_question(category: int = Query(None), difficulty: str = Query(None)):
         "category": question_data["category"],
         "difficulty": question_data["difficulty"]
     }
+
+# uvicorn main:app --reload

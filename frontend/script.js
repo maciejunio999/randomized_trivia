@@ -77,6 +77,9 @@ async function loadQuestion() {
     // Odpalamy timer jeśli włączony
     if (timerEnabled) startTimer();
 
+    const progressPercent = Math.round((currentQuestion + 1) / totalQuestions * 100);
+    document.getElementById("progress-fill").style.width = `${progressPercent}%`;
+
   } catch (err) {
     console.error("Błąd przy pobieraniu pytania:", err.message || err);
 
@@ -90,6 +93,7 @@ async function loadQuestion() {
     nextBtn.disabled = false;
     nextBtn.textContent = currentQuestion + 1 >= totalQuestions ? "Zakończ" : "Następne pytanie";
     document.getElementById("retry-btn").style.display = "inline-block";
+
     return;
   }
 }
@@ -166,6 +170,8 @@ document.getElementById("start-btn").addEventListener("click", () => {
 
   document.querySelector(".setup").style.display = "none";
   document.querySelector(".quiz-container").style.display = "block";
+
+  document.getElementById("progress-fill").style.width = "0%";
 
   loadQuestion();
 });
