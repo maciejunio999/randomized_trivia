@@ -113,12 +113,17 @@ function handleAnswer(button, answer) {
 
   if (!answer) {
     feedback.textContent = `⏱️ Czas minął! Poprawna odpowiedź to: ${correctAnswer}`;
+    document.getElementById("wrong-sound").play();
   } else if (answer === correctAnswer) {
     feedback.textContent = "✅ Dobrze!";
     score++;
+    document.getElementById("correct-sound").play();
   } else {
     feedback.textContent = `❌ Źle! Poprawna odpowiedź to: ${correctAnswer}`;
+    document.getElementById("wrong-sound").play();
   }
+
+  document.getElementById("score-counter").textContent = `Wynik: ${score} pkt`;
 
   nextBtn.disabled = false;
   document.getElementById("timer").textContent = "";
@@ -172,6 +177,8 @@ document.getElementById("start-btn").addEventListener("click", () => {
   document.querySelector(".quiz-container").style.display = "block";
 
   document.getElementById("progress-fill").style.width = "0%";
+
+  document.getElementById("score-counter").textContent = "Wynik: 0 pkt";
 
   loadQuestion();
 });

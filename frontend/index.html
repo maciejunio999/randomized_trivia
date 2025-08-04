@@ -52,17 +52,23 @@
   <!-- Główna część quizu -->
   <div class="quiz-container" style="display: none;">
     <h1>Quiz Wiedzy Ogólnej</h1>
+
     <button id="back-btn">&larr; Wróć do konfiguracji</button>
+
     <p id="question-counter"></p>
+    <p id="score-counter">Wynik: 0 pkt</p>
+
     <div class="progress-bar">
       <div class="progress-fill" id="progress-fill"></div>
     </div>
+
     <div id="question-box">
       <button id="retry-btn" style="display: none;">Spróbuj ponownie</button>
       <p id="question-text">Ładuję pytanie...</p>
       <p id="timer" style="font-weight: bold; color: red;"></p>
       <div id="answers"></div>
     </div>
+
     <p id="feedback"></p>
     <button id="next-btn" disabled>Następne pytanie</button>
   </div>
@@ -70,13 +76,19 @@
   <!-- Podsumowanie -->
   <div id="summary-box" style="display: none;">
     <h2>Podsumowanie</h2>
+
     <p id="result-text"></p>
     <p id="percent-text"></p>
     <p id="comment-text"></p>
+
     <button id="restart-btn">🔁 Wróć do konfiguracji</button>
   </div>
 
 
   <script src="script.js"></script>
+
+  <audio id="correct-sound" src="correct.mp3" preload="auto"></audio>
+  <audio id="wrong-sound" src="wrong.mp3" preload="auto"></audio>
+
 </body>
 </html>
