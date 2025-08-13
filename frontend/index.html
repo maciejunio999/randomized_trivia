@@ -1,64 +1,64 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Quiz Wiedzy Ogólnej</title>
+  <title>General Knowledge Quiz</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- Panel konfiguracji quizu -->
+  <!-- Quiz Setup Panel -->
   <div class="setup" id="config-box">
-    <h2>Wybierz kategorię i/lub poziom trudności</h2>
+    <h2>Select category and/or difficulty</h2>
 
-    <label for="category">Kategoria:</label>
+    <label for="category">Category:</label>
     <select id="category">
-      <option value="">Losowa</option>
-      <option value="9">Wiedza ogólna</option>
+      <option value="">Random</option>
+      <option value="9">General Knowledge</option>
       <option value="11">Film</option>
-      <option value="12">Muzyka</option>
-      <option value="15">Gry wideo</option>
-      <option value="18">Komputery</option>
-      <option value="23">Historia</option>
-      <option value="27">Zwierzęta</option>
+      <option value="12">Music</option>
+      <option value="15">Video Games</option>
+      <option value="18">Computers</option>
+      <option value="23">History</option>
+      <option value="27">Animals</option>
     </select>
 
-    <label for="difficulty">Poziom trudności:</label>
+    <label for="difficulty">Difficulty:</label>
     <select id="difficulty">
-      <option value="">Losowy</option>
-      <option value="easy">Łatwy</option>
-      <option value="medium">Średni</option>
-      <option value="hard">Trudny</option>
+      <option value="">Any</option>
+      <option value="easy">Easy</option>
+      <option value="medium">Medium</option>
+      <option value="hard">Hard</option>
     </select>
 
     <div>
-      <label for="question-count">Liczba pytań:</label>
+      <label for="question-count">Number of questions:</label>
       <input type="number" id="question-count" min="1" max="50" value="10" />
     </div>
 
     <div>
       <input type="checkbox" id="enable-timer" />
-      <label for="enable-timer">Włącz limit czasu</label>
+      <label for="enable-timer">Enable time limit</label>
     </div>
 
     <div>
       <input type="checkbox" id="test-mode" />
-      <label for="test-mode">Tryb testu (bez podpowiedzi)</label>
+      <label for="test-mode">Test mode (no feedback)</label>
     </div>
 
     <div id="time-container" style="display: none;">
-      <label for="time-limit">Limit czasu na pytanie (sekundy):</label>
+      <label for="time-limit">Time per question (seconds):</label>
       <input type="number" id="time-limit" min="5" max="60" value="15" />
     </div>
 
-    <button id="start-btn">Rozpocznij quiz</button>
+    <button id="start-btn">Start Quiz</button>
   </div>
 
-  <!-- Główna część quizu -->
+  <!-- Quiz Interface -->
   <div class="quiz-container" style="display: none;">
-    <h1>Quiz Wiedzy Ogólnej</h1>
+    <h1>General Knowledge Quiz</h1>
 
-    <button id="back-btn">&larr; Wróć do konfiguracji</button>
+    <button id="back-btn">&larr; Back to setup</button>
 
     <p id="question-counter"></p>
     <p id="score-counter" style="display: none;"></p>
@@ -68,27 +68,26 @@
     </div>
 
     <div id="question-box">
-      <button id="retry-btn" style="display: none;">Spróbuj ponownie</button>
-      <p id="question-text">Ładuję pytanie...</p>
+      <button id="retry-btn" style="display: none;">Try again</button>
+      <p id="question-text">Loading question...</p>
       <p id="timer" style="font-weight: bold; color: red;"></p>
       <div id="answers"></div>
     </div>
 
     <p id="feedback"></p>
-    <button id="next-btn" disabled>Następne pytanie</button>
+    <button id="next-btn" disabled>Next Question</button>
   </div>
 
-  <!-- Podsumowanie -->
+  <!-- Summary -->
   <div id="summary-box" style="display: none;">
-    <h2>Podsumowanie</h2>
+    <h2>Summary</h2>
 
     <p id="result-text"></p>
     <p id="percent-text"></p>
     <p id="comment-text"></p>
 
-    <button id="restart-btn">🔁 Wróć do konfiguracji</button>
+    <button id="restart-btn">🔁 Back to setup</button>
   </div>
-
 
   <script src="script.js"></script>
 

@@ -1,5 +1,6 @@
 const API_URL = "http://127.0.0.1:8000/quiz";
 
+// UI elements
 const questionText = document.getElementById("question-text");
 const answersBox = document.getElementById("answers");
 const feedback = document.getElementById("feedback");
@@ -8,24 +9,21 @@ const nextBtn = document.getElementById("next-btn");
 let currentQuestion = 0;
 let totalQuestions = 10;
 let score = 0;
-
 let timerInterval = null;
 let timerEnabled = false;
 let timeLeft = 15;
 let correctAnswer = "";
+let testMode = false;
 
 let retryCount = 0;
 const MAX_RETRIES = 3;
 
-let testMode = false;
-
-// Ładowanie pytania
+// Fetch and display a question
 async function loadQuestion() {
-  // Blokujemy przycisk i czyścimy poprzednie dane
   nextBtn.disabled = true;
   feedback.textContent = "";
   answersBox.innerHTML = "";
-  questionText.textContent = "Ładuję pytanie...";
+  questionText.textContent = "Loading question...";
   document.getElementById("timer").textContent = "";
   document.getElementById("retry-btn").style.display = "none";
 
@@ -42,28 +40,21 @@ async function loadQuestion() {
     const res = await fetch(url.toString());
     const data = await res.json();
 
-    // Walidacja danych
+    // Validate question data
     if (!data || !data.question || !data.correct_answer || !data.answers) {
-      throw new Error(data?.error || "Błąd danych pytania");
+      throw new Error(data?.error || "Invalid question data");
     }
 
-    // Reset liczby prób
     retryCount = 0;
 
-    // Ustawienie tekstu przycisku
-    if (currentQuestion === totalQuestions - 1) {
-      nextBtn.textContent = "Zakończ";
-    } else {
-      nextBtn.textContent = "Następne pytanie";
-    }
+    nextBtn.textContent = currentQuestion === totalQuestions - 1 ? "Finish" : "Next Question";
 
-    // Dekodujemy pytanie i odpowiedzi
+    // Decode question and answers
     const decodedQuestion = decodeHTMLEntities(data.question);
     correctAnswer = decodeHTMLEntities(data.correct_answer);
     const answers = data.answers.map(decodeHTMLEntities);
     shuffleArray(answers);
 
-    // Wyświetlamy pytanie i odpowiedzi
     questionText.textContent = decodedQuestion;
     answers.forEach(answer => {
       const btn = document.createElement("button");
@@ -73,40 +64,34 @@ async function loadQuestion() {
       answersBox.appendChild(btn);
     });
 
-    // Pokazujemy licznik pytania
-    document.getElementById("question-counter").textContent = `Pytanie ${currentQuestion + 1} z ${totalQuestions}`;
-
-    // Odpalamy timer jeśli włączony
+    document.getElementById("question-counter").textContent = `Question ${currentQuestion + 1} of ${totalQuestions}`;
     if (timerEnabled) startTimer();
 
     const progressPercent = Math.round((currentQuestion + 1) / totalQuestions * 100);
     document.getElementById("progress-fill").style.width = `${progressPercent}%`;
 
   } catch (err) {
-    console.error("Błąd przy pobieraniu pytania:", err.message || err);
-
+    console.error("Error loading question:", err.message || err);
     retryCount++;
+
     if (retryCount < MAX_RETRIES) {
-      console.warn(`Ponawiam próbę pobrania pytania... (${retryCount})`);
       return loadQuestion();
     }
 
-    questionText.textContent = "Nie udało się pobrać pytania. 😕";
+    questionText.textContent = "Failed to load question. 😕";
     nextBtn.disabled = false;
-    nextBtn.textContent = currentQuestion + 1 >= totalQuestions ? "Zakończ" : "Następne pytanie";
+    nextBtn.textContent = currentQuestion + 1 >= totalQuestions ? "Finish" : "Next Question";
     document.getElementById("retry-btn").style.display = "inline-block";
-
     return;
   }
 }
 
+// Handle user's answer selection
 function handleAnswer(button, answer) {
   clearInterval(timerInterval);
 
   const allButtons = document.querySelectorAll(".answer-btn");
-  allButtons.forEach(btn => {
-    btn.disabled = true;
-  });
+  allButtons.forEach(btn => btn.disabled = true);
 
   if (!testMode) {
     allButtons.forEach(btn => {
@@ -119,26 +104,20 @@ function handleAnswer(button, answer) {
   }
 
   if (!answer) {
-    if (!testMode) {
-      feedback.textContent = `⏱️ Czas minął! Poprawna odpowiedź to: ${correctAnswer}`;
-    }
-    document.getElementById("wrong-sound").play();
+    if (!testMode) feedback.textContent = `⏱️ Time's up! Correct answer: ${correctAnswer}`;
+    if (!testMode) document.getElementById("wrong-sound").play();
   } else if (answer === correctAnswer) {
-    if (!testMode) {
-      feedback.textContent = "✅ Dobrze!";
-    }
+    if (!testMode) feedback.textContent = "✅ Correct!";
     score++;
     if (!testMode) document.getElementById("correct-sound").play();
   } else {
-    if (!testMode) {
-      feedback.textContent = `❌ Źle! Poprawna odpowiedź to: ${correctAnswer}`;
-    }
+    if (!testMode) feedback.textContent = `❌ Wrong! Correct answer: ${correctAnswer}`;
     if (!testMode) document.getElementById("wrong-sound").play();
   }
 
   const scoreCounter = document.getElementById("score-counter");
   if (!testMode) {
-    scoreCounter.textContent = `Wynik: ${score} pkt`;
+    scoreCounter.textContent = `Score: ${score} pts`;
     scoreCounter.style.display = "block";
   } else {
     scoreCounter.style.display = "none";
@@ -148,6 +127,7 @@ function handleAnswer(button, answer) {
   document.getElementById("timer").textContent = "";
 }
 
+// Utility: Shuffle array
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -155,22 +135,24 @@ function shuffleArray(array) {
   }
 }
 
+// Utility: Decode HTML entities (e.g. &amp;)
 function decodeHTMLEntities(text) {
   const txt = document.createElement("textarea");
   txt.innerHTML = text;
   return txt.value;
 }
 
+// Timer countdown logic
 function startTimer() {
-  nextBtn.disabled = true;const userTime = parseInt(document.getElementById("time-limit")?.value);
+  nextBtn.disabled = true;
+  const userTime = parseInt(document.getElementById("time-limit")?.value);
   timeLeft = userTime > 0 ? userTime : 15;
   const timerDisplay = document.getElementById("timer");
-  timerDisplay.textContent = `Pozostało: ${timeLeft}s`;
+  timerDisplay.textContent = `Time left: ${timeLeft}s`;
 
   timerInterval = setInterval(() => {
     timeLeft--;
-    timerDisplay.textContent = `Pozostało: ${timeLeft}s`;
-
+    timerDisplay.textContent = `Time left: ${timeLeft}s`;
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
       handleAnswer(null, "");
@@ -178,48 +160,42 @@ function startTimer() {
   }, 1000);
 }
 
-// Obsługa kliknięcia 'Start'
+// Start button logic
 document.getElementById("start-btn").addEventListener("click", () => {
   currentQuestion = 0;
   score = 0;
 
-  // Pobierz wartości z formularza
-  const countInput = document.getElementById("question-count").value;
-  const timeInput = document.getElementById("time-limit").value;
-
-  totalQuestions = Math.max(1, parseInt(countInput) || 10); // domyślnie 10
-  timeLeft = Math.max(5, parseInt(timeInput) || 15);         // domyślnie 15
-
+  totalQuestions = Math.max(1, parseInt(document.getElementById("question-count").value) || 10);
+  timeLeft = Math.max(5, parseInt(document.getElementById("time-limit").value) || 15);
   timerEnabled = document.getElementById("enable-timer")?.checked || false;
   testMode = document.getElementById("test-mode")?.checked || false;
+  
 
   document.querySelector(".setup").style.display = "none";
   document.querySelector(".quiz-container").style.display = "block";
 
   document.getElementById("progress-fill").style.width = "0%";
 
-  document.getElementById("score-counter").textContent = "Wynik: 0 pkt";
   const scoreCounter = document.getElementById("score-counter");
-  scoreCounter.textContent = "Wynik: 0 pkt";
+  scoreCounter.textContent = `Score: 0 pts`;
   scoreCounter.style.display = testMode ? "none" : "block";
 
   loadQuestion();
 });
 
-
-// Przycisk powrotu do konfiguracji
+// Back button
 document.getElementById("back-btn").addEventListener("click", () => {
   document.querySelector(".quiz-container").style.display = "none";
   document.querySelector(".setup").style.display = "block";
   document.getElementById("score-counter").style.display = "none";
 });
 
-// Przycisk retry (próba ponownego pobrania pytania)
+// Retry fetch button
 document.getElementById("retry-btn").addEventListener("click", () => {
   loadQuestion();
 });
 
-// Przycisk następne pytanie / zakończ quiz
+// Next or Finish button
 document.getElementById("next-btn").addEventListener("click", () => {
   currentQuestion++;
   if (currentQuestion >= totalQuestions) {
@@ -229,35 +205,25 @@ document.getElementById("next-btn").addEventListener("click", () => {
   loadQuestion();
 });
 
-// Podsumowanie wyniku
+// Show result summary
 function showSummary() {
   document.querySelector(".quiz-container").style.display = "none";
   document.getElementById("summary-box").style.display = "block";
 
-  const resultText = document.getElementById("result-text");
-  const percentText = document.getElementById("percent-text");
-  const commentText = document.getElementById("comment-text");  // <-- dodany element
-
   const percent = Math.round((score / totalQuestions) * 100);
-  resultText.textContent = `Twój wynik: ${score} / ${totalQuestions}`;
-  percentText.textContent = `To ${percent}% poprawnych odpowiedzi.`;
+  document.getElementById("result-text").textContent = `Your score: ${score} / ${totalQuestions}`;
+  document.getElementById("percent-text").textContent = `That's ${percent}% correct.`;
 
-  // Komentarz na podstawie wyniku
   let comment = "";
-  if (percent <= 30) {
-    comment = "Musisz jeszcze poćwiczyć! 💡";
-  } else if (percent <= 60) {
-    comment = "Nieźle, ale stać Cię na więcej! 🙂";
-  } else if (percent <= 90) {
-    comment = "Świetny wynik! 💪";
-  } else {
-    comment = "Mistrz! 👑";
-  }
+  if (percent <= 30) comment = "You need more practice! 💡";
+  else if (percent <= 60) comment = "Not bad, but you can do better! 🙂";
+  else if (percent <= 90) comment = "Great result! 💪";
+  else comment = "You're a master! 👑";
 
-  commentText.textContent = comment;
+  document.getElementById("comment-text").textContent = comment;
 }
 
-// Restart quizu z podsumowania
+// Restart from summary
 document.getElementById("restart-btn").addEventListener("click", () => {
   currentQuestion = 0;
   score = 0;
@@ -267,7 +233,7 @@ document.getElementById("restart-btn").addEventListener("click", () => {
   document.querySelector(".setup").style.display = "block";
 });
 
-// dynamiczne pokazywanie pola limitu czasu
+// Show/hide time input if timer is enabled
 document.getElementById("enable-timer").addEventListener("change", (e) => {
   const timeContainer = document.getElementById("time-container");
   timeContainer.style.display = e.target.checked ? "block" : "none";
