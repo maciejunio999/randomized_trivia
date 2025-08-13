@@ -17,6 +17,8 @@ let correctAnswer = "";
 let retryCount = 0;
 const MAX_RETRIES = 3;
 
+let testMode = false;
+
 // Ładowanie pytania
 async function loadQuestion() {
   // Blokujemy przycisk i czyścimy poprzednie dane
@@ -104,26 +106,43 @@ function handleAnswer(button, answer) {
   const allButtons = document.querySelectorAll(".answer-btn");
   allButtons.forEach(btn => {
     btn.disabled = true;
-    if (btn.textContent === correctAnswer) {
-      btn.classList.add("correct");
-    } else if (btn.textContent === answer) {
-      btn.classList.add("incorrect");
-    }
   });
 
-  if (!answer) {
-    feedback.textContent = `⏱️ Czas minął! Poprawna odpowiedź to: ${correctAnswer}`;
-    document.getElementById("wrong-sound").play();
-  } else if (answer === correctAnswer) {
-    feedback.textContent = "✅ Dobrze!";
-    score++;
-    document.getElementById("correct-sound").play();
-  } else {
-    feedback.textContent = `❌ Źle! Poprawna odpowiedź to: ${correctAnswer}`;
-    document.getElementById("wrong-sound").play();
+  if (!testMode) {
+    allButtons.forEach(btn => {
+      if (btn.textContent === correctAnswer) {
+        btn.classList.add("correct");
+      } else if (btn.textContent === answer) {
+        btn.classList.add("incorrect");
+      }
+    });
   }
 
-  document.getElementById("score-counter").textContent = `Wynik: ${score} pkt`;
+  if (!answer) {
+    if (!testMode) {
+      feedback.textContent = `⏱️ Czas minął! Poprawna odpowiedź to: ${correctAnswer}`;
+    }
+    document.getElementById("wrong-sound").play();
+  } else if (answer === correctAnswer) {
+    if (!testMode) {
+      feedback.textContent = "✅ Dobrze!";
+    }
+    score++;
+    if (!testMode) document.getElementById("correct-sound").play();
+  } else {
+    if (!testMode) {
+      feedback.textContent = `❌ Źle! Poprawna odpowiedź to: ${correctAnswer}`;
+    }
+    if (!testMode) document.getElementById("wrong-sound").play();
+  }
+
+  const scoreCounter = document.getElementById("score-counter");
+  if (!testMode) {
+    scoreCounter.textContent = `Wynik: ${score} pkt`;
+    scoreCounter.style.display = "block";
+  } else {
+    scoreCounter.style.display = "none";
+  }
 
   nextBtn.disabled = false;
   document.getElementById("timer").textContent = "";
@@ -172,6 +191,7 @@ document.getElementById("start-btn").addEventListener("click", () => {
   timeLeft = Math.max(5, parseInt(timeInput) || 15);         // domyślnie 15
 
   timerEnabled = document.getElementById("enable-timer")?.checked || false;
+  testMode = document.getElementById("test-mode")?.checked || false;
 
   document.querySelector(".setup").style.display = "none";
   document.querySelector(".quiz-container").style.display = "block";
@@ -179,6 +199,9 @@ document.getElementById("start-btn").addEventListener("click", () => {
   document.getElementById("progress-fill").style.width = "0%";
 
   document.getElementById("score-counter").textContent = "Wynik: 0 pkt";
+  const scoreCounter = document.getElementById("score-counter");
+  scoreCounter.textContent = "Wynik: 0 pkt";
+  scoreCounter.style.display = testMode ? "none" : "block";
 
   loadQuestion();
 });
@@ -188,6 +211,7 @@ document.getElementById("start-btn").addEventListener("click", () => {
 document.getElementById("back-btn").addEventListener("click", () => {
   document.querySelector(".quiz-container").style.display = "none";
   document.querySelector(".setup").style.display = "block";
+  document.getElementById("score-counter").style.display = "none";
 });
 
 // Przycisk retry (próba ponownego pobrania pytania)
@@ -238,6 +262,7 @@ document.getElementById("restart-btn").addEventListener("click", () => {
   currentQuestion = 0;
   score = 0;
 
+  document.getElementById("score-counter").style.display = "none";
   document.getElementById("summary-box").style.display = "none";
   document.querySelector(".setup").style.display = "block";
 });

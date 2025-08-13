@@ -41,6 +41,11 @@
       <label for="enable-timer">Włącz limit czasu</label>
     </div>
 
+    <div>
+      <input type="checkbox" id="test-mode" />
+      <label for="test-mode">Tryb testu (bez podpowiedzi)</label>
+    </div>
+
     <div id="time-container" style="display: none;">
       <label for="time-limit">Limit czasu na pytanie (sekundy):</label>
       <input type="number" id="time-limit" min="5" max="60" value="15" />
@@ -56,7 +61,7 @@
     <button id="back-btn">&larr; Wróć do konfiguracji</button>
 
     <p id="question-counter"></p>
-    <p id="score-counter">Wynik: 0 pkt</p>
+    <p id="score-counter" style="display: none;"></p>
 
     <div class="progress-bar">
       <div class="progress-fill" id="progress-fill"></div>
