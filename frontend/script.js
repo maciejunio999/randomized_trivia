@@ -238,3 +238,32 @@ document.getElementById("enable-timer").addEventListener("change", (e) => {
   const timeContainer = document.getElementById("time-container");
   timeContainer.style.display = e.target.checked ? "block" : "none";
 });
+
+
+const darkModeToggle = document.getElementById("dark-mode-toggle");
+const modeLabel = document.getElementById("mode-label");
+
+// get mode from localStorage
+if (localStorage.getItem("darkMode") === "true") {
+  document.body.classList.add("dark-mode");
+  darkModeToggle.checked = true;
+  modeLabel.textContent = "Light Mode";
+} else {
+  document.body.classList.remove("dark-mode");
+  darkModeToggle.checked = false;
+  modeLabel.textContent = "Dark Mode";
+}
+
+// chnage toggle
+darkModeToggle.addEventListener("change", function () {
+  if (this.checked) {
+    document.body.classList.add("dark-mode");
+    modeLabel.textContent = "Light Mode";
+    localStorage.setItem("darkMode", "true");
+  } else {
+    document.body.classList.remove("dark-mode");
+    modeLabel.textContent = "Dark Mode";
+    localStorage.setItem("darkMode", "false");
+  }
+});
+

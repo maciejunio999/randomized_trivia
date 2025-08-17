@@ -173,3 +173,123 @@ body {
   background-color: #007bff;
   transition: width 0.3s ease;
 }
+
+/* Dark mode styles */
+body.dark-mode {
+  background-color: #1e1e1e;
+  color: #f0f0f0;
+}
+
+body.dark-mode .setup,
+body.dark-mode .quiz-container,
+body.dark-mode #summary-box {
+  background-color: #2b2b2b;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode button,
+body.dark-mode select,
+body.dark-mode input {
+  background-color: #3a3a3a;
+  color: #f0f0f0;
+  border: 1px solid #555;
+}
+
+body.dark-mode .answer-btn {
+  background-color: #333;
+  color: #fff;
+  border-color: #555;
+}
+
+body.dark-mode .answer-btn.correct {
+  background-color: #2e7d32; /* green */
+}
+
+body.dark-mode .answer-btn.incorrect {
+  background-color: #c62828; /* red */
+}
+
+body.dark-mode #dark-mode-toggle {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Toggle button container */
+.theme-switch-wrapper {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000;
+  font-size: 14px;
+}
+
+/* Switch outer container */
+.theme-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+/* Hide default checkbox */
+.theme-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Slider track */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  background-color: #ccc;
+  border-radius: 34px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: 0.4s;
+}
+
+/* Circle knob */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2196f3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+/* Rounded style */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* Light/Dark label */
+#mode-label {
+  color: #333;
+}
+
+/* Adjust label color in dark mode */
+body.dark-mode #mode-label {
+  color: #f0f0f0;
+}
