@@ -18,6 +18,10 @@ let testMode = false;
 let retryCount = 0;
 const MAX_RETRIES = 3;
 
+const darkModeToggle = document.getElementById("dark-mode-toggle");
+const modeLabel = document.getElementById("mode-label");
+let learnMode = false;
+
 // Fetch and display a question
 async function loadQuestion() {
   nextBtn.disabled = true;
@@ -86,46 +90,82 @@ async function loadQuestion() {
   }
 }
 
+
 // Handle user's answer selection
 function handleAnswer(button, answer) {
-  clearInterval(timerInterval);
+  if (!button || button.disabled) return;
 
   const allButtons = document.querySelectorAll(".answer-btn");
-  allButtons.forEach(btn => btn.disabled = true);
+  clearInterval(timerInterval);
 
-  if (!testMode) {
+  // If correct
+  if (answer === correctAnswer) {
+    button.classList.add("correct");
+
+    // Play success sound only if not in learn mode
+    if (!learnMode) {
+      document.getElementById("correct-sound").play();
+    }
+
+    // Disable all buttons
+    allButtons.forEach(btn => btn.disabled = true);
+
+    nextBtn.disabled = false;
+    feedback.textContent = "✅ Correct!";
+    if (!testMode && !learnMode) {
+      score++;
+      document.getElementById("score-counter").textContent = `Score: ${score} pts`;
+    }
+    document.getElementById("timer").textContent = "";
+    return;
+  }
+
+  // If incorrect
+  button.classList.add("incorrect");
+  button.disabled = true;
+  document.getElementById("wrong-sound").play();
+
+  if (learnMode) {
+    const remaining = [...allButtons].filter(btn => !btn.disabled);
+    if (remaining.length === 1) {
+      const lastBtn = remaining[0];
+      lastBtn.disabled = true;
+
+      if (lastBtn.textContent === correctAnswer) {
+        lastBtn.classList.add("correct");
+        // Don't play any sound here – user didn't actively choose the correct answer
+        feedback.textContent = "❌ All options tried!";
+      } else {
+        lastBtn.classList.add("incorrect");
+        document.getElementById("wrong-sound").play();  // optional
+        feedback.textContent = "❌ All options tried!";
+      }
+
+      nextBtn.disabled = false;
+    } else {
+      feedback.textContent = "❌ Try again!";
+    }
+  } else {
+    // Standard test or quiz mode
     allButtons.forEach(btn => {
+      btn.disabled = true;
       if (btn.textContent === correctAnswer) {
         btn.classList.add("correct");
-      } else if (btn.textContent === answer) {
-        btn.classList.add("incorrect");
       }
     });
-  }
-
-  if (!answer) {
-    if (!testMode) feedback.textContent = `⏱️ Time's up! Correct answer: ${correctAnswer}`;
+    if (!testMode) {
+      feedback.textContent = `❌ Wrong! Correct answer: ${correctAnswer}`;
+    }
+    nextBtn.disabled = false;
     if (!testMode) document.getElementById("wrong-sound").play();
-  } else if (answer === correctAnswer) {
-    if (!testMode) feedback.textContent = "✅ Correct!";
-    score++;
-    if (!testMode) document.getElementById("correct-sound").play();
-  } else {
-    if (!testMode) feedback.textContent = `❌ Wrong! Correct answer: ${correctAnswer}`;
-    if (!testMode) document.getElementById("wrong-sound").play();
+    if (!testMode && !learnMode) {
+      document.getElementById("score-counter").textContent = `Score: ${score} pts`;
+    }
   }
 
-  const scoreCounter = document.getElementById("score-counter");
-  if (!testMode) {
-    scoreCounter.textContent = `Score: ${score} pts`;
-    scoreCounter.style.display = "block";
-  } else {
-    scoreCounter.style.display = "none";
-  }
-
-  nextBtn.disabled = false;
   document.getElementById("timer").textContent = "";
 }
+
 
 // Utility: Shuffle array
 function shuffleArray(array) {
@@ -169,7 +209,7 @@ document.getElementById("start-btn").addEventListener("click", () => {
   timeLeft = Math.max(5, parseInt(document.getElementById("time-limit").value) || 15);
   timerEnabled = document.getElementById("enable-timer")?.checked || false;
   testMode = document.getElementById("test-mode")?.checked || false;
-  
+  learnMode = document.getElementById("learn-mode")?.checked || false;  
 
   document.querySelector(".setup").style.display = "none";
   document.querySelector(".quiz-container").style.display = "block";
@@ -178,7 +218,7 @@ document.getElementById("start-btn").addEventListener("click", () => {
 
   const scoreCounter = document.getElementById("score-counter");
   scoreCounter.textContent = `Score: 0 pts`;
-  scoreCounter.style.display = testMode ? "none" : "block";
+  scoreCounter.style.display = (!testMode && !learnMode) ? "block" : "none";
 
   loadQuestion();
 });
@@ -220,6 +260,14 @@ function showSummary() {
   else if (percent <= 90) comment = "Great result! 💪";
   else comment = "You're a master! 👑";
 
+  if (learnMode) {
+    document.getElementById("summary-box").style.display = "block";
+    document.getElementById("result-text").textContent = "You completed Learn Mode!";
+    document.getElementById("percent-text").textContent = "";
+    document.getElementById("comment-text").textContent = "";
+    return;
+  }
+
   document.getElementById("comment-text").textContent = comment;
 }
 
@@ -239,9 +287,6 @@ document.getElementById("enable-timer").addEventListener("change", (e) => {
   timeContainer.style.display = e.target.checked ? "block" : "none";
 });
 
-
-const darkModeToggle = document.getElementById("dark-mode-toggle");
-const modeLabel = document.getElementById("mode-label");
 
 // get mode from localStorage
 if (localStorage.getItem("darkMode") === "true") {
