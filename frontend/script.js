@@ -24,9 +24,37 @@ let learnMode = false;
 let arcadeMode = false;
 
 
-// Fetch and display a question from the API
+/* -----------------------  MODE-DEPENDENT UI  ----------------------- */
+function updateModeUI() {
+  const mode = document.getElementById("mode-select").value;
+  const isLearn = mode === "learn";
+  const isArcade = mode === "arcade";
+
+  const timerCheckbox = document.getElementById("enable-timer");
+  const timerWrapper = timerCheckbox.parentElement;
+  const timeContainer = document.getElementById("time-container");
+  const questionCountInput = document.getElementById("question-count");
+
+  if (isLearn) {
+    timerCheckbox.checked = false;
+    timerCheckbox.disabled = true;
+    timeContainer.style.display = "none";
+    timerWrapper.style.opacity = "0.6";
+  } else {
+    timerCheckbox.disabled = false;
+    timerWrapper.style.opacity = "1";
+    timeContainer.style.display = timerCheckbox.checked ? "block" : "none";
+  }
+
+  // Arcade -> block cumber of questions on main screen
+  questionCountInput.disabled = isArcade;
+}
+document.getElementById("mode-select").addEventListener("change", updateModeUI);
+
+
+/* -----------------------  FETCH QUESTION  ----------------------- */
 async function loadQuestion() {
-  // Reset UI state before loading a new question
+  // Reset UI
   nextBtn.disabled = true;
   feedback.textContent = "";
   answersBox.innerHTML = "";
@@ -88,8 +116,7 @@ async function loadQuestion() {
       answersBox.appendChild(btn);
     });
 
-    // Update question counter text
-    document.getElementById("question-counter").textContent = 
+    document.getElementById("question-counter").textContent =
       `Question ${currentQuestion + 1} of ${totalQuestions}`;
 
     // Start timer if enabled
@@ -119,47 +146,66 @@ async function loadQuestion() {
 }
 
 
-// Handle user's answer selection
+/* -----------------------  HANDLE ANSWERS  ----------------------- */
 function handleAnswer(button, answer) {
-  // Ignore if no button or already disabled (e.g. clicked multiple times)
-  if (!button || button.disabled) return;
+  // if clicked button was turned off — ignorr.
+  if (button && button.disabled) return;
 
   const allButtons = document.querySelectorAll(".answer-btn");
-  clearInterval(timerInterval); // Stop the countdown timer if active
+  clearInterval(timerInterval);
 
-  // === CASE 1: CORRECT ANSWER ===
+  const showPerQuestionFeedback = !testMode && !arcadeMode; // in Test/Arcade no feedback
+
+  // CORRECT
   if (answer === correctAnswer) {
-    button.classList.add("correct");
+    if (button) button.classList.add("correct");
 
-    // Play sound only if not in learn mode (no rewards there)
+    // add points for all modes but not for learning
     if (!learnMode) {
+      score++;
+      // counter live only for Standard (not in Test/Learn/Arcade)
+      if (!testMode && !learnMode && !arcadeMode) {
+        document.getElementById("score-counter").textContent = `Score: ${score} pts`;
+      }
+    }
+
+    if (!testMode) {
+      // in Test w/o sounds; in Standard/Arcade/Learn OK
       document.getElementById("correct-sound").play();
     }
 
-    // Disable all buttons to prevent more input
+    // block rest of buttons
     allButtons.forEach(btn => btn.disabled = true);
 
-    nextBtn.disabled = false; // Allow moving to the next question
-    feedback.textContent = "✅ Correct!";
+    if (showPerQuestionFeedback) feedback.textContent = "✅ Correct!";
 
-    // Increase score only if not in test/learn mode
-    if (!testMode && !learnMode) {
-      score++;
-      document.getElementById("score-counter").textContent = `Score: ${score} pts`;
+    // in Arcade auto-next for next question
+    if (arcadeMode) {
+      setTimeout(() => {
+        currentQuestion++;
+        loadQuestion();
+      }, 250);
+    } else {
+      nextBtn.disabled = false;
     }
 
-    // Clear the timer display
     document.getElementById("timer").textContent = "";
     return;
   }
 
-  // === CASE 2: INCORRECT ANSWER ===
-  button.classList.add("incorrect");  // Mark as incorrect visually
-  button.disabled = true;             // Prevent re-clicking
-  document.getElementById("wrong-sound").play();  // Play error sound
-    // Arcade Mode: End quiz immediately on wrong answer
+  // INCORRECT (with timeouts – when button === null)
+  if (button) {
+    button.classList.add("incorrect");
+    button.disabled = true;
+  }
+
+  if (!testMode) {
+    // test with no sounds
+    document.getElementById("wrong-sound").play();
+  }
+
   if (arcadeMode) {
-    showSummary();  // Skip everything else and show result
+    showSummary(); // sudden death
     return;
   }
 
@@ -176,41 +222,31 @@ function handleAnswer(button, answer) {
       if (lastBtn.textContent === correctAnswer) {
         // Show correct but do NOT play sound, as user didn't click it
         lastBtn.classList.add("correct");
-        feedback.textContent = "❌ All options tried!";
       } else {
         // Last one was incorrect too (very rare case)
         lastBtn.classList.add("incorrect");
-        document.getElementById("wrong-sound").play(); // optional
-        feedback.textContent = "❌ All options tried!";
+        if (!testMode) document.getElementById("wrong-sound").play();
       }
-
-      nextBtn.disabled = false; // Allow going to next question
+      feedback.textContent = "❌ All options tried!";
+      nextBtn.disabled = false;
     } else {
       // Allow user to try again (not all options exhausted)
       feedback.textContent = "❌ Try again!";
     }
 
   } else {
-    // --- Standard mode (normal or test mode) ---
+    // STANDARD / TEST
     allButtons.forEach(btn => {
-      btn.disabled = true; // Lock all inputs
-      if (btn.textContent === correctAnswer) {
-        btn.classList.add("correct"); // Reveal the correct one
-      }
+      btn.disabled = true;
+      if (btn.textContent === correctAnswer) btn.classList.add("correct");
     });
 
-    // Show feedback only if not in test mode
-    if (!testMode) {
+    if (showPerQuestionFeedback) {
       feedback.textContent = `❌ Wrong! Correct answer: ${correctAnswer}`;
       document.getElementById("wrong-sound").play();  // Play again in normal mode
     }
 
     nextBtn.disabled = false;
-
-    // Update score display if needed
-    if (!testMode && !learnMode) {
-      document.getElementById("score-counter").textContent = `Score: ${score} pts`;
-    }
   }
 
   // Clear timer display
@@ -218,13 +254,14 @@ function handleAnswer(button, answer) {
 }
 
 
-// Utility: Shuffle array
+/* -----------------------  UTILSY  ----------------------- */
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
   }
 }
+
 
 // Utility: Decode HTML entities (e.g. &amp;)
 function decodeHTMLEntities(text) {
@@ -233,7 +270,8 @@ function decodeHTMLEntities(text) {
   return txt.value;
 }
 
-// Timer countdown logic
+
+/* -----------------------  TIMER  ----------------------- */
 function startTimer() {
   nextBtn.disabled = true;
   const userTime = parseInt(document.getElementById("time-limit")?.value);
@@ -246,32 +284,36 @@ function startTimer() {
     timerDisplay.textContent = `Time left: ${timeLeft}s`;
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
+      // timeout as wrong (no points)
       handleAnswer(null, "");
     }
   }, 1000);
 }
 
 
-// Start button logic
+/* -----------------------  START  ----------------------- */
 document.getElementById("start-btn").addEventListener("click", () => {
   // Reset quiz state
   currentQuestion = 0;
   score = 0;
 
-  // Get selected game modes
-  timerEnabled = document.getElementById("enable-timer")?.checked || false;
   const selectedMode = document.getElementById("mode-select").value;
   testMode = selectedMode === "test";
   learnMode = selectedMode === "learn";
   arcadeMode = selectedMode === "arcade";
 
+  // Timer: from checkbox, but for learning mode we make OFF
+  timerEnabled = document.getElementById("enable-timer")?.checked || false;
+  if (learnMode) {
+    timerEnabled = false;
+    document.getElementById("enable-timer").checked = false;
+  }
 
-  // Set time per question
+  // Time for question
   const timeInput = document.getElementById("time-limit").value;
   timeLeft = Math.max(5, parseInt(timeInput) || 15);
 
-  // Determine number of questions
-  // If arcade mode is enabled, use a large number and disable the input
+  // Number of questions
   const questionCountInput = document.getElementById("question-count");
   questionCountInput.disabled = arcadeMode;
   totalQuestions = arcadeMode ? 9999 : Math.max(1, parseInt(questionCountInput.value) || 10);
@@ -293,17 +335,18 @@ document.getElementById("start-btn").addEventListener("click", () => {
 });
 
 
-// Back button
+/* -----------------------  NAVIGATION  ----------------------- */
 document.getElementById("back-btn").addEventListener("click", () => {
   document.querySelector(".quiz-container").style.display = "none";
   document.querySelector(".setup").style.display = "block";
   document.getElementById("score-counter").style.display = "none";
 });
 
-// Retry fetch button
+
 document.getElementById("retry-btn").addEventListener("click", () => {
   loadQuestion();
 });
+
 
 // Next or Finish button
 document.getElementById("next-btn").addEventListener("click", () => {
@@ -316,7 +359,7 @@ document.getElementById("next-btn").addEventListener("click", () => {
 });
 
 
-// Show result summary screen at the end of the quiz
+/* -----------------------  SUMMARY  ----------------------- */
 function showSummary() {
   // Hide the main quiz area and show the summary box
   document.querySelector(".quiz-container").style.display = "none";
@@ -338,7 +381,6 @@ function showSummary() {
 
   // Special case: Learn Mode – no score or comment is shown
   if (learnMode) {
-    document.getElementById("summary-box").style.display = "block";
     document.getElementById("result-text").textContent = "You completed Learn Mode!";
     document.getElementById("percent-text").textContent = "";
     document.getElementById("comment-text").textContent = "";
@@ -368,14 +410,21 @@ document.getElementById("restart-btn").addEventListener("click", () => {
   document.querySelector(".setup").style.display = "block";
 });
 
-// Show/hide time input if timer is enabled
+
+/* -----------------------  TIMER UI (checkbox)  ----------------------- */
 document.getElementById("enable-timer").addEventListener("change", (e) => {
+  const isLearn = document.getElementById("mode-select").value === "learn";
   const timeContainer = document.getElementById("time-container");
+  if (isLearn) {
+    e.target.checked = false;
+    timeContainer.style.display = "none";
+    return;
+  }
   timeContainer.style.display = e.target.checked ? "block" : "none";
 });
 
 
-// get mode from localStorage
+/* -----------------------  DARK MODE  ----------------------- */
 if (localStorage.getItem("darkMode") === "true") {
   document.body.classList.add("dark-mode");
   darkModeToggle.checked = true;
@@ -386,7 +435,8 @@ if (localStorage.getItem("darkMode") === "true") {
   modeLabel.textContent = "Dark Mode";
 }
 
-// chnage toggle
+
+// Change toggle
 darkModeToggle.addEventListener("change", function () {
   if (this.checked) {
     document.body.classList.add("dark-mode");
@@ -400,8 +450,5 @@ darkModeToggle.addEventListener("change", function () {
 });
 
 
-// Toggle disabling of question count input when Arcade Mode is checked/unchecked
-document.getElementById("arcade-mode").addEventListener("change", (e) => {
-  const questionCountInput = document.getElementById("question-count");
-  questionCountInput.disabled = e.target.checked;
-});
+/* -----------------------  INIT ----------------------- */
+updateModeUI();
