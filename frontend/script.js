@@ -260,9 +260,11 @@ document.getElementById("start-btn").addEventListener("click", () => {
 
   // Get selected game modes
   timerEnabled = document.getElementById("enable-timer")?.checked || false;
-  testMode = document.getElementById("test-mode")?.checked || false;
-  learnMode = document.getElementById("learn-mode")?.checked || false;
-  arcadeMode = document.getElementById("arcade-mode")?.checked || false;
+  const selectedMode = document.getElementById("mode-select").value;
+  testMode = selectedMode === "test";
+  learnMode = selectedMode === "learn";
+  arcadeMode = selectedMode === "arcade";
+
 
   // Set time per question
   const timeInput = document.getElementById("time-limit").value;
